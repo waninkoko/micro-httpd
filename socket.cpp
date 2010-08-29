@@ -84,15 +84,15 @@ bool CSocket::Bind(unsigned short port)
 
 	int res;
 
-        /* Socket address */
-        sockAddr.sin_family      = AF_INET;
-        sockAddr.sin_port        = htons(port);
-        sockAddr.sin_addr.s_addr = INADDR_ANY;
+	/* Socket address */
+	sockAddr.sin_family      = AF_INET;
+	sockAddr.sin_port        = htons(port);
+	sockAddr.sin_addr.s_addr = INADDR_ANY;
 
-        /* Bind address to socket */
-        res = net_bind(sockFd, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
-        if (res == -1)
-                return false;
+	/* Bind address to socket */
+	res = net_bind(sockFd, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
+	if (res == -1)
+		return false;
 
 	return true;
 }
@@ -123,8 +123,6 @@ CSocket *CSocket::Accept(void)
 	fd = net_accept(sockFd, (struct sockaddr *)&sockAddr, &sockLen);	
 	if (fd == -1)
 		return NULL;
-
-	CLog::Print("Accept returned!");
 
 	/* Create socket */
 	return (new CSocket(fd));

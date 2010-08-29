@@ -32,10 +32,12 @@
 #include <iostream>
 #include <cstdlib>
 
+#include "file.hpp"
 #include "http.hpp"
 #include "log.hpp"
 #include "server.hpp"
 
+#include "wii/fat.h"
 #include "wii/gui.h"
 #include "wii/network.h"
 #include "wii/sys.h"
@@ -77,6 +79,15 @@ int main(int argc, char **argv)
 	/* Initialize console */
 	Gui_InitConsole();
 
+	CLog::Print("Mounting SD card...");
+
+	/* Initialize libfat */
+	res = Fat_MountSD();
+	if (res < 0) {
+		CLog::PrintErr("ERROR: Could not mount the SD card!");
+		goto out;
+	}
+
 	CLog::Print("Initializing network...");
 
 	/* Initialize network */
@@ -94,18 +105,21 @@ int main(int argc, char **argv)
 	/* Default port */
 	port = 82;
 
+	/* Set basepath */
+	CFile::SetPath("sd:");
+
 	/* Create server */
 	Server = new CServer(port);
 	if (!Server) {
 		CLog::PrintErr("ERROR: Server could NOT be created!");
-		return 1;
+		goto out;
 	}
 
 	/* Start server */
 	res = Server->Start();
 	if (!res) {
 		CLog::PrintErr("ERROR: Server could NOT be started!");
-		return 1;
+		goto out;
 	}
 
 	/* Keep waiting for connections */
