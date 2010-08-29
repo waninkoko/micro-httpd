@@ -32,7 +32,7 @@
 #ifndef _THREAD_HPP_
 #define _THREAD_HPP_
 
-#include <pthread.h>
+#include <ogcsys.h>
 
 
 /*!
@@ -40,7 +40,7 @@
 	\author Miguel Boton Campo
 */
 class CMutex {
-	pthread_mutex_t mutex;	//!< Mutex object.
+	mutex_t mutex;	//!< Mutex object.
 
 public:
 	/*!
@@ -72,7 +72,7 @@ public:
 	\author Miguel Boton Campo
 */
 class CThread {
-	pthread_t thread;	//!< Thread object.
+	lwp_t thread;	//!< Thread object.
 
 public:
 	/*!

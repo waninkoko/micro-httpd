@@ -32,13 +32,15 @@
 #ifndef _SOCKET_HPP_
 #define _SOCKET_HPP_
 
+#include <ogcsys.h>
+
 
 /*!
 	Socket object class.
 	\author Miguel Boton Campo
 */
 class CSocket {
-	int sockFd;	//!< Socket descriptor.
+	s32 sockFd;	//!< Socket descriptor.
 
 public:
 	/*!

@@ -30,11 +30,10 @@
  */
 
 #include <cstdio>
-#include <unistd.h>
-#include <sys/socket.h>
+#include <network.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
 
+#include "log.hpp"
 #include "socket.hpp"
 
 
@@ -62,7 +61,7 @@ bool CSocket::Create(void)
 	Destroy();
 
 	/* Create socket */
-	sockFd = socket(AF_INET, SOCK_STREAM, 0);
+	sockFd = net_socket(AF_INET, SOCK_STREAM, 0);
 	if (sockFd < 0)
 		return false;
 
@@ -73,7 +72,7 @@ void CSocket::Destroy(void)
 {
 	/* Shutdown socket */
 	if (sockFd >= 0)
-		shutdown(sockFd, SHUT_RDWR);
+		net_shutdown(sockFd, 2);
 
 	/* Reset descriptor */
 	sockFd = -1;
@@ -91,7 +90,7 @@ bool CSocket::Bind(unsigned short port)
         sockAddr.sin_addr.s_addr = INADDR_ANY;
 
         /* Bind address to socket */
-        res = bind(sockFd, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
+        res = net_bind(sockFd, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
         if (res == -1)
                 return false;
 
@@ -103,7 +102,7 @@ bool CSocket::Listen(unsigned int max)
 	int res;
 
 	/* Listen for connections */
-	res = listen(sockFd, max);
+	res = net_listen(sockFd, max);
 	if (res == -1)
 		return false;
 
@@ -121,9 +120,11 @@ CSocket *CSocket::Accept(void)
 	sockLen = sizeof(sockAddr);
 
 	/* Accept incoming connection */
-	fd = accept(sockFd, (struct sockaddr *)&sockAddr, &sockLen);	
+	fd = net_accept(sockFd, (struct sockaddr *)&sockAddr, &sockLen);	
 	if (fd == -1)
 		return NULL;
+
+	CLog::Print("Accept returned!");
 
 	/* Create socket */
 	return (new CSocket(fd));
@@ -132,11 +133,11 @@ CSocket *CSocket::Accept(void)
 ssize_t CSocket::Send(const void *buffer, size_t len)
 {
 	/* Send buffer */
-	return send(sockFd, buffer, len, 0);
+	return net_send(sockFd, buffer, len, 0);
 }
 
 ssize_t CSocket::Receive(void *buffer, size_t len)
 {
 	/* Receive buffer */
-	return recv(sockFd, buffer, len, 0);
+	return net_recv(sockFd, buffer, len, 0);
 }

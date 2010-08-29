@@ -31,14 +31,17 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <signal.h>
 
 #include "http.hpp"
 #include "log.hpp"
 #include "server.hpp"
 
-using namespace std;
+#include "wii/gui.h"
+#include "wii/network.h"
+#include "wii/sys.h"
+#include "wii/video.h"
 
+using namespace std;
 
 /* Global variables */
 static CServer *Server = NULL;
@@ -48,11 +51,13 @@ void Quit(int dummy)
 {
 	CLog::Print("Terminating...");
 
-	/* Stop server */
-	Server->Stop();
+	if (Server) {
+		/* Stop server */
+		Server->Stop();
 
-	/* Delete server */
-	delete Server;
+		/* Delete server */
+		delete Server;
+	}
 
 	/* Exit */
 	exit(0);
@@ -63,11 +68,31 @@ int main(int argc, char **argv)
 	unsigned short port;
 	int res;
 
+	/* Initialize system */
+	Sys_Init();
+
+	/* Set video mode */
+	Video_SetMode();
+
+	/* Initialize console */
+	Gui_InitConsole();
+
+	CLog::Print("Initializing network...");
+
+	/* Initialize network */
+	res = Network_Init();
+	if (res < 0) {
+		CLog::PrintErr("ERROR: Could not initialize the network!");
+		goto out;
+	}
+
+	CLog::Print("IP address: %s\n", Network_GetIP());
+
 	/* Initialize HTTP class */
 	CHTTP::Init();
 
-	/* Server port */
-	port = atoi(argv[1]);
+	/* Default port */
+	port = 82;
 
 	/* Create server */
 	Server = new CServer(port);
@@ -83,12 +108,10 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	/* Register signal */
-	signal(SIGINT, Quit);
-
 	/* Keep waiting for connections */
 	while (Server->Accept());
 
+out:
 	/* Quit */
 	Quit(0);
 

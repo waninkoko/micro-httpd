@@ -35,22 +35,22 @@
 CMutex::CMutex(void)
 {
 	/* Initialize the mutex */
-	pthread_mutex_init(&mutex, NULL);
+	LWP_MutexInit(&mutex, false);
 }
 
 CMutex::~CMutex(void)
 {
 	/* Destroy the mutex */
-	pthread_mutex_destroy(&mutex);
+	LWP_MutexDestroy(mutex);
 }
 
 bool CMutex::Lock(void)
 {
-	int res;
+	s32 res;
 
 	/* Lock the mutex */
-	res = pthread_mutex_lock(&mutex);
-	if (res)
+	res = LWP_MutexLock(mutex);
+	if (res < 0)
 		return false;
 
 	return true;
@@ -58,11 +58,11 @@ bool CMutex::Lock(void)
 
 bool CMutex::Unlock(void)
 {
-	int res;
+	s32 res;
 
 	/* Unlock the mutex */
-	res = pthread_mutex_unlock(&mutex);
-	if (res)
+	res = LWP_MutexUnlock(mutex);
+	if (res < 0)
 		return false;
 
 	return true;
@@ -77,11 +77,11 @@ CThread::~CThread(void)
 
 bool CThread::Create(void *(*routine)(void *), void *arg)
 {
-	int res;
+	s32 res;
 
 	/* Create thread */
-	res = pthread_create(&thread, NULL, routine, arg);
-	if (res)
+	res = LWP_CreateThread(&thread, routine, arg, NULL, 0, 0);
+	if (res < 0)
 		return false;
 
 	return true;
@@ -89,11 +89,11 @@ bool CThread::Create(void *(*routine)(void *), void *arg)
 
 bool CThread::Destroy(void)
 {
-	int res;
+	s32 res;
 
 	/* Destroy thread */
-	res = pthread_cancel(thread);
-	if (res)
+	res = LWP_SuspendThread(thread);
+	if (res < 0)
 		return false;
 
 	return true;
@@ -101,11 +101,11 @@ bool CThread::Destroy(void)
 
 bool CThread::Join(void)
 {
-	int res;
+	s32 res;
 
 	/* Join thread */
-	res = pthread_join(thread, NULL);
-	if (res)
+	res = LWP_JoinThread(thread, NULL);
+	if (res < 0)
 		return false;
 
 	return true;
@@ -113,7 +113,4 @@ bool CThread::Join(void)
 
 void CThread::Exit(void *ret)
 {
-	/* Terminate thread */
-	pthread_exit(ret);
 }
-
