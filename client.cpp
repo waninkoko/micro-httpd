@@ -36,6 +36,9 @@
 #include "error_page.hpp"
 #include "file.hpp"
 
+/* Constants */
+#define BUF_MAXLEN	1024
+
 
 CClient::CClient(CSocket *Socket)
 {
@@ -170,9 +173,10 @@ bool CClient::SendFile(string filepath)
 
 bool CClient::SendFile(const char *filepath)
 {
-	CFile File;
+	CFile   File;
+	CHeader Header;
 
-	char  *buffer;
+	char   buffer[BUF_MAXLEN];
 	size_t len;
 	bool   res;
 
@@ -183,30 +187,57 @@ bool CClient::SendFile(const char *filepath)
 	if (!res) {
 		/* Handle error */
 		HandleError(REPLY_NOENT);
-		return false;
+		goto out;
 	}
 
 	/* Get file size */
 	len = File.Size();
 
-	/* Read file */
-	buffer = File.Get();
-
-	/* Buffer received */
-	if (buffer) {
-		/* Send data */
-		res = Send(buffer, len);
-
-		/* Delete buffer */
-		delete buffer;
-	} else {
+	/* No contents? */
+	if (!len) {
 		/* Handle error */
 		HandleError(REPLY_INTERR);
 
-		/* Return error */
 		res = false;
+		goto out;
 	}
 
+	/* Setup header */
+	Header.AddReply(REPLY_OK);
+	Header.AddDate();
+	Header.AddServer();
+	Header.AddLength(len);
+	Header.AddEnd();
+
+	/* Send header */
+	res = SendHeader(Header);
+	if (!res)
+		goto out;
+
+	/* Read loop */
+	while (len) {
+		ssize_t ret, size;
+
+		/* Block size */
+		size = (len > BUF_MAXLEN) ? BUF_MAXLEN : len;
+
+		/* Read block */
+		res = File.Read(buffer, size);
+		if (!res)
+			break;
+
+		/* Send block */
+		ret = Write(buffer, size);
+		if (ret != size) {
+			res = false;
+			break;
+		}
+
+		/* Update length */
+		len -= size;
+	}
+
+out:
 	/* Close file */
 	File.Close();
 

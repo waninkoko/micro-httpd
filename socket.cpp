@@ -132,7 +132,7 @@ CSocket *CSocket::Accept(void)
 ssize_t CSocket::Send(const void *buffer, size_t len)
 {
 	/* Send buffer */
-	return send(sockFd, buffer, len, 0);
+	return send(sockFd, buffer, len, MSG_NOSIGNAL);
 }
 
 ssize_t CSocket::Receive(void *buffer, size_t len)
